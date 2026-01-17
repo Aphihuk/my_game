@@ -27,8 +27,10 @@ let player = { x: 100, y: 100, vx: 0, vy: 0, size: 60, emoji: "🚗", hp: 5 };
 // ຂໍ້ມູນຂອງສັດຕູ (ເກັບເປັນ Array ເພາະມີຫຼາຍໂຕ)
 let enemies = []; 
 
-// ເກັບລູກກະສຸນທັງໝົດ
+// ເກັບລູກກະສຸນທັງໝົດ (enemy bullets)
 let bullets = [];
+// ເກັບລູກກະສຸນຂອງຜູ້ຫຼິ້ນ
+let playerBullets = [];
 // ເກັບປຸ່ມທີ່ກົດ
 let keys = {};
 // ເກັບສະຖານະຫົວໃຈ (ຊີວິດ)
@@ -228,6 +230,31 @@ function update() {
     // Decrement dash cooldown
     if (dashCooldown > 0) dashCooldown--;
 
+    // Handle player shooting
+    if (keys[' '] && !isGameOver) {
+        let dx = player.vx;
+        let dy = player.vy;
+        let len = Math.sqrt(dx*dx + dy*dy);
+        if (len > 0) {
+            dx /= len;
+            dy /= len;
+        } else {
+            dx = 0;
+            dy = -1; // default up
+        }
+        playerBullets.push({
+            x: player.x,
+            y: player.y,
+            size: 20,
+            emoji: "🔵",
+            dx: dx,
+            dy: dy
+        });
+        shootSound.currentTime = 0;
+        shootSound.play().catch(()=>{}); // Play shoot sound
+        keys[' '] = false; // Prevent continuous shooting
+    }
+
     // Clamp player position to canvas boundaries
     player.x = Math.max(player.size / 2, Math.min(canvas.width - player.size / 2, player.x));
     player.y = Math.max(player.size / 2, Math.min(canvas.height - player.size / 2, player.y));
@@ -286,6 +313,28 @@ function update() {
         
     }
 
+    // 4. ອັບເດດລູກກະສຸນຂອງຜູ້ຫຼິ້ນ
+    for (let i = playerBullets.length-1; i>=0; i--) {
+        let b = playerBullets[i];
+        b.x += b.dx * 5; // Faster than enemy bullets
+        b.y += b.dy * 5;
+        // Check collision with enemies
+        for (let j = enemies.length-1; j>=0; j--) {
+            if (isCollide(b, enemies[j])) {
+                // Remove bullet and enemy
+                playerBullets.splice(i, 1);
+                enemies.splice(j, 1);
+                hitSound.currentTime = 0;
+                hitSound.play().catch(()=>{});
+                break;
+            }
+        }
+        // Remove bullet if out of bounds
+        if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height) {
+            playerBullets.splice(i, 1);
+        }
+    }
+
     draw(); // ວາດຮູບໃໝ່
     requestAnimationFrame(update); // ວົນລູບຕໍ່ໄປ
 }
@@ -314,6 +363,12 @@ function draw() {
 
     // ວາດລູກກະສຸນ
     bullets.forEach(b => {
+        ctx.font = b.size+"px Arial";
+        ctx.fillText(b.emoji, b.x, b.y);
+    });
+
+    // ວາດລູກກະສຸນຂອງຜູ້ຫຼິ້ນ
+    playerBullets.forEach(b => {
         ctx.font = b.size+"px Arial";
         ctx.fillText(b.emoji, b.x, b.y);
     });
