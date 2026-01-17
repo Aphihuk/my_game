@@ -10,24 +10,26 @@ const btnMenu = document.getElementById("btnMenu");
 canvas.focus();
 
 // --- ຕັ້ງຄ່າສຽງ (Audio Setup) ---
-const moveSound = new Audio("../assets/sound/Race_Car.mp3"); 
+const moveSound = new Audio("../assets/sound/Race_Car.mp3");
 const shootSound = new Audio("../assets/sound/Laser Gun Sound Effect.mp3");
 const hitSound = new Audio("../assets/sound/roblox-death-sound_1.mp3");
-const gameOverSound = new Audio("../assets/sound/bruh-sound-effect_WstdzdM.mp3");
+const gameOverSound = new Audio(
+  "../assets/sound/bruh-sound-effect_WstdzdM.mp3"
+);
 
 // --- ຕົວປ່ຽນຂອງເກມ (Game Variables) ---
 // ຂໍ້ມູນຂອງຜູ້ຫຼິ້ນ (ລົດ)
 let player = { x: 100, y: 100, size: 60, emoji: "🚗", hp: 5 };
 
 // ຂໍ້ມູນຂອງສັດຕູ (ເກັບເປັນ Array ເພາະມີຫຼາຍໂຕ)
-let enemies = []; 
+let enemies = [];
 
 // ເກັບລູກກະສຸນທັງໝົດ
 let bullets = [];
 // ເກັບປຸ່ມທີ່ກົດ
 let keys = {};
 // ເກັບສະຖານະຫົວໃຈ (ຊີວິດ)
-let playerHearts = []; 
+let playerHearts = [];
 // ສະຖານະວ່າເກມຈົບຫຼືຍັງ
 let isGameOver = false;
 
@@ -38,205 +40,321 @@ let enemySpawnerInterval;
 let startTime;
 let invincibilityDuration = 5000; // 5 ວິນາທີໃນ milliseconds
 
+// ຕົວປ່ຽນສຳລັບຄະແນນ ແລະ ເວລາ
+let score = 0;
+let survivalTime = 0;
+let lastScoreUpdate = 0;
+
+// ຕົວປ່ຽນສຳລັບທັກສະ 1 (ຢຸດເວລາ ແລະ Teleport)
+let isTimeStopped = false;
+let canTeleport = false;
+let skillCooldown = 3000; // 3 ວິນາທີ cooldown
+let lastSkill = 0;
+let mouseX = 0;
+let mouseY = 0;
+
+// ຟັງຊັນເປີດໃຊ້ທັກສະ 1
+function activateSkill() {
+  const now = Date.now();
+  if (now - lastSkill >= skillCooldown) {
+    isTimeStopped = true;
+    canTeleport = true;
+    lastSkill = now;
+    setTimeout(() => {
+      isTimeStopped = false;
+    }, 3000); // ຢຸດເວລາ 3 ວິນາທີ
+    console.log("Skill activated: Enemies stopped, click to teleport!");
+  }
+}
+
 // --- ຟັງຊັນຕັ້ງຄ່າຫົວໃຈເລີ່ມຕົ້ນ ---
 function initHearts() {
-    playerHearts = [];
-    for (let i = 0; i < player.hp; i++) {
-        playerHearts.push(true); // true = ຫົວໃຈສີແດງ (ຍັງບໍ່ຖືກຍິງ)
-    }
+  playerHearts = [];
+  for (let i = 0; i < player.hp; i++) {
+    playerHearts.push(true); // true = ຫົວໃຈສີແດງ (ຍັງບໍ່ຖືກຍິງ)
+  }
 }
 
 // --- ຟັງຊັນສ້າງສັດຕູ (Spawn Enemy) ---
 function spawnEnemy() {
-    // ສຸ່ມຕຳແໜ່ງເກີດ (Random X, Y)
-    let randomX = Math.random() * (canvas.width - 60);
-    let randomY = Math.random() * (canvas.height - 60);
+  // ສຸ່ມຕຳແໜ່ງເກີດ (Random X, Y)
+  let randomX = Math.random() * (canvas.width - 60);
+  let randomY = Math.random() * (canvas.height - 60);
 
-    // ສ້າງ Object ສັດຕູໂຕໃໝ່
-    let newEnemy = { 
-        x: randomX, 
-        y: randomY, 
-        size: 60, 
-        emoji: "👻", 
-        speed: 1.5 
-    };
+  // ສ້າງ Object ສັດຕູໂຕໃໝ່
+  let newEnemy = {
+    x: randomX,
+    y: randomY,
+    size: 60,
+    emoji: "👻",
+    speed: 1.5,
+  };
 
-    // ເພີ່ມສັດຕູເຂົ້າໄປໃນກອງທັບ (Array)
-    enemies.push(newEnemy);
+  // ເພີ່ມສັດຕູເຂົ້າໄປໃນກອງທັບ (Array)
+  enemies.push(newEnemy);
 }
 
 // --- ຟັງຊັນເລີ່ມຕົ້ນເກມ (Init Game) ---
 function initGame() {
-    startTime = Date.now(); // ເລີ່ມນັບເວລາສຳລັບການເປັນອະນາເມັດ
-    initHearts(); // ຣີເຊັດຫົວໃຈ
-    enemies = []; // ລົບສັດຕູເກົ່າອອກໃຫ້ໝົດ
-    spawnEnemy(); // ສ້າງສັດຕູໂຕທຳອິດທັນທີ
+  startTime = Date.now(); // ເລີ່ມນັບເວລາສຳລັບການເປັນອະນາເມັດ
+  initHearts(); // ຣີເຊັດຫົວໃຈ
+  enemies = []; // ລົບສັດຕູເກົ່າອອກໃຫ້ໝົດ
+  spawnEnemy(); // ສ້າງສັດຕູໂຕທຳອິດທັນທີ
 
-    // ຕັ້ງໂມງຈັບເວລາໃຫ້ສ້າງສັດຕູເພີ່ມທຸກໆ 20 ວິນາທີ (20000 ms)
-    // ຕ້ອງລ້າງເວລາເກົ່າກ່ອນສະເໝີ ເພື່ອບໍ່ໃຫ້ມັນທັບຊ້ອນກັນ
-    if (enemySpawnerInterval) clearInterval(enemySpawnerInterval);
+  // ຕັ້ງໂມງຈັບເວລາໃຫ້ສ້າງສັດຕູເພີ່ມທຸກໆ 20 ວິນາທີ (20000 ms)
+  // ຕ້ອງລ້າງເວລາເກົ່າກ່ອນສະເໝີ ເພື່ອບໍ່ໃຫ້ມັນທັບຊ້ອນກັນ
+  if (enemySpawnerInterval) clearInterval(enemySpawnerInterval);
 
-    enemySpawnerInterval = setInterval(() => {
-        if (!isGameOver) {
-            spawnEnemy(); // ສ້າງສັດຕູເພີ່ມ
-        }
-    }, 20000);
+  enemySpawnerInterval = setInterval(() => {
+    if (!isGameOver) {
+      spawnEnemy(); // ສ້າງສັດຕູເພີ່ມ
+    }
+  }, 20000);
 }
 
 // ເອີ້ນໃຊ້ຟັງຊັນເລີ່ມເກມ
 initGame();
 
 // --- ຮັບຄ່າການກົດປຸ່ມ (Event Listeners) ---
-canvas.addEventListener('keydown', (e) => { keys[e.key.toLowerCase()] = true; });
-canvas.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
-
-// ປຸ່ມກົດຕອນ Game Over
-btnRetry.addEventListener('click', () => {
-    location.reload(); // ໂຫຼດໜ້າເວັບໃໝ່ (ຫຼິ້ນໃໝ່)
+canvas.addEventListener("keydown", (e) => {
+  keys[e.key.toLowerCase()] = true;
+  if (e.key === "1") {
+    activateSkill();
+  }
+});
+canvas.addEventListener("keyup", (e) => {
+  keys[e.key.toLowerCase()] = false;
 });
 
-btnMenu.addEventListener('click', () => {
-    window.location.href = '../frontend/index.html'; // ກັບໄປໜ້າເມນູ
+canvas.addEventListener("mousemove", (e) => {
+  const rect = canvas.getBoundingClientRect();
+  mouseX = e.clientX - rect.left;
+  mouseY = e.clientY - rect.top;
+});
+
+// ເພີ່ມການກົດປຸ່ມລູກຊື້ນເພື່ອໃຊ້ທັກສະ 1
+canvas.addEventListener("click", (e) => {
+  if (canTeleport) {
+    player.x = mouseX;
+    player.y = mouseY;
+    canTeleport = false;
+    console.log("Teleported!");
+  }
+});
+
+// ປຸ່ມກົດຕອນ Game Over
+btnRetry.addEventListener("click", () => {
+  location.reload(); // ໂຫຼດໜ້າເວັບໃໝ່ (ຫຼິ້ນໃໝ່)
+});
+
+btnMenu.addEventListener("click", () => {
+  window.location.href = "../frontend/index.html"; // ກັບໄປໜ້າເມນູ
 });
 
 // --- ຟັງຊັນຍິງລູກກະສຸນ ---
 function shootBullet(shooter) {
-    if(isGameOver) return; // ຖ້າເກມຈົບແລ້ວ ຫ້າມຍິງ
+  if (isGameOver) return; // ຖ້າເກມຈົບແລ້ວ ຫ້າມຍິງ
 
-    // ຄຳນວນທິດທາງຈາກ ສັດຕູ -> ໄປຫາ -> ຜູ້ຫຼິ້ນ
-    let dx = (player.x - shooter.x) / 100; 
-    let dy = (player.y - shooter.y) / 100;
-    
-    bullets.push({ 
-        x: shooter.x, 
-        y: shooter.y, 
-        size: 30, 
-        emoji: "❤️", 
-        dx: dx, 
-        dy: dy 
-    });
+  // ຄຳນວນທິດທາງຈາກ ສັດຕູ -> ໄປຫາ -> ຜູ້ຫຼິ້ນ
+  let dx = (player.x - shooter.x) / 100;
+  let dy = (player.y - shooter.y) / 100;
 
-    shootSound.currentTime = 0;
-    shootSound.play().catch(()=>{}); // ຫຼິ້ນສຽງຍິງ
+  bullets.push({
+    x: shooter.x,
+    y: shooter.y,
+    size: 30,
+    emoji: "❤️",
+    dx: dx,
+    dy: dy,
+  });
+
+  shootSound.currentTime = 0;
+  shootSound.play().catch(() => {}); // ຫຼິ້ນສຽງຍິງ
 }
 
 // --- ຟັງຊັນກວດສອບການຕຳກັນ (Collision) ---
 function isCollide(a, b) {
-    return Math.abs(a.x - b.x) < (a.size/2 + b.size/2) && 
-           Math.abs(a.y - b.y) < (a.size/2 + b.size/2);
+  return (
+    Math.abs(a.x - b.x) < a.size / 2 + b.size / 2 &&
+    Math.abs(a.y - b.y) < a.size / 2 + b.size / 2
+  );
 }
 
 // --- ຟັງຊັນຈົບເກມ (Game Over) ---
 function triggerGameOver() {
-    isGameOver = true;
-    // ສັ່ງຢຸດການສ້າງສັດຕູເພີ່ມ (ຢຸດ Timer)
+  isGameOver = true;
+  // ສັ່ງຢຸດການສ້າງສັດຕູເພີ່ມ (ຢຸດ Timer)
 
-	gameOverSound.play().catch(()=>{});
-    clearInterval(enemySpawnerInterval);
-    // ສະແດງໜ້າຈໍ Game Over (ເອົາ class 'hidden' ອອກ)
-    gameOverScreen.classList.remove('hidden');
+  gameOverSound.play().catch(() => {});
+  clearInterval(enemySpawnerInterval);
+  // ສະແດງໜ້າຈໍ Game Over (ເອົາ class 'hidden' ອອກ)
+  gameOverScreen.classList.remove("hidden");
 }
 
 // --- ຟັງຊັນອັບເດດເກມ (Update Loop) ---
 // ຟັງຊັນນີ້ຈະເຮັດວຽກຊ້ຳໆ 60 ເທື່ອຕໍ່ວິນາທີ
 function update() {
-    if (isGameOver) return; // ຖ້າເກມຈົບ ໃຫ້ຢຸດເຮັດວຽກທັນທີ
+  if (isGameOver) return; // ຖ້າເກມຈົບ ໃຫ້ຢຸດເຮັດວຽກທັນທີ
 
-    // 1. ຄວບຄຸມການຍ່າງຂອງຜູ້ຫຼິ້ນ
-    if (keys['w']) { player.y -= 5; player.emoji="🥺"; moveSound.play().catch(()=>{}); }
-    if (keys['s']) { player.y += 5; player.emoji="😁"; moveSound.play().catch(()=>{}); }
-    if (keys['a']) { player.x -= 5; player.emoji="😎"; moveSound.play().catch(()=>{}); }
-    if (keys['d']) { player.x += 5; player.emoji="😒"; moveSound.play().catch(()=>{}); }
+  // ອັບເດດເວລາແລະຄະແນນ
+  survivalTime = Math.floor((Date.now() - startTime) / 1000);
+  if (Date.now() - lastScoreUpdate >= 1000) {
+    score += 1;
+    lastScoreUpdate = Date.now();
+  }
 
-    // Clamp player position to canvas boundaries
-    player.x = Math.max(player.size / 2, Math.min(canvas.width - player.size / 2, player.x));
-    player.y = Math.max(player.size / 2, Math.min(canvas.height - player.size / 2, player.y));
+  // ອັບເດດຈໍສະເເດງເວລາແລະຄະແນນໃນ HTML
+  document.getElementById("timeDisplay").textContent =
+    "Time: " + survivalTime + "s";
+  document.getElementById("scoreDisplay").textContent =
+    "Score: " + Math.floor(score);
 
-    // 2. ຄວບຄຸມສັດຕູທຸກໂຕ (Enemies Logic)
-    enemies.forEach(enemy => {
-        // [ແກ້ໄຂແລ້ວ] ຄຳນວນໄລຍະຫ່າງລະຫວ່າງ ຜີ ກັບ ຄົນ
-        let dirX = player.x - enemy.x;
-        let dirY = player.y - enemy.y;
-        let dist = Math.sqrt(dirX*dirX + dirY*dirY);
-        
-        // ສັ່ງໃຫ້ຜີຍ່າງເຂົ້າຫາຜູ້ຫຼິ້ນ
-        if(dist > 1){
-            enemy.x += (dirX/dist) * enemy.speed;
-            enemy.y += (dirY/dist) * enemy.speed;
-        }
+  // 1. ຄວບຄຸມການຍ່າງຂອງຜູ້ຫຼິ້ນ
+  if (keys["w"]) {
+    player.y -= 5;
+    player.emoji = "🥺";
+    moveSound.play().catch(() => {});
+  }
+  if (keys["s"]) {
+    player.y += 5;
+    player.emoji = "😁";
+    moveSound.play().catch(() => {});
+  }
+  if (keys["a"]) {
+    player.x -= 5;
+    player.emoji = "😎";
+    moveSound.play().catch(() => {});
+  }
+  if (keys["d"]) {
+    player.x += 5;
+    player.emoji = "😒";
+    moveSound.play().catch(() => {});
+  }
 
-        // ສຸ່ມໃຫ້ຜີຍິງລູກກະສຸນ (ໂອກາດ 1%)
-        if (Math.random() < 0.01) {
-            shootBullet(enemy);
-        }
-    });
+  // Clamp player position to canvas boundaries
+  player.x = Math.max(
+    player.size / 2,
+    Math.min(canvas.width - player.size / 2, player.x)
+  );
+  player.y = Math.max(
+    player.size / 2,
+    Math.min(canvas.height - player.size / 2, player.y)
+  );
 
-    // 3. ອັບເດດລູກກະສຸນ
-    for (let i = bullets.length-1; i>=0; i--) {
-        let b = bullets[i];
-        b.x += b.dx*2; // ຂະຍັບລູກກະສຸນ
-        b.y += b.dy*2;
+  // 2. ຄວບຄຸມສັດຕູທຸກໂຕ (Enemies Logic)
+  enemies.forEach((enemy) => {
+    if (isTimeStopped) return;
 
-        // ກວດສອບວ່າກະສຸນຕຳຜູ້ຫຼິ້ນບໍ່? ແລະ ບໍ່ໄດ້ເປັນອະນາເມັດ
-        if (isCollide(player, b) && Date.now() - startTime >= invincibilityDuration) {
-            let heartDamaged = false;
-            // ຫາຫົວໃຈທີ່ຍັງແດງຢູ່ ແລ້ວປ່ຽນເປັນສີຂາວ
-            for (let h = 0; h < playerHearts.length; h++) {
-                if (playerHearts[h] === true) {
-                    playerHearts[h] = false; 
-                    heartDamaged = true;
+    // [ແກ້ໄຂແລ້ວ] ຄຳນວນໄລຍະຫ່າງລະຫວ່າງ ຜີ ກັບ ຄົນ
+    let dirX = player.x - enemy.x;
+    let dirY = player.y - enemy.y;
+    let dist = Math.sqrt(dirX * dirX + dirY * dirY);
 
-					hitSound.currentTime = 0;//ຮີເຊັບສຽງເພືອໄຫ້ຫລີ້ນໄດ້ຕໍ່ກັນ
-					hitSound.play().catch(()=>{});
-                    bullets.splice(i, 1); // ລົບກະສຸນຖິ້ມ
-                    break;
-                }
-            }
-            
-            // ຖ້າຫົວໃຈໝົດທຸກດວງ -> ຈົບເກມ
-            if (!heartDamaged || playerHearts.every(h => h === false)) {
-                triggerGameOver(); 
-            }
-        }
-
-        // ລົບກະສຸນທີ່ອອກນອກຈໍ
-        if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height) {
-            bullets.splice(i,1);
-        }
-        
+    // ສັ່ງໃຫ້ຜີຍ່າງເຂົ້າຫາຜູ້ຫຼິ້ນ
+    if (dist > 1) {
+      enemy.x += (dirX / dist) * enemy.speed;
+      enemy.y += (dirY / dist) * enemy.speed;
     }
 
-    draw(); // ວາດຮູບໃໝ່
-    requestAnimationFrame(update); // ວົນລູບຕໍ່ໄປ
+    // ສຸ່ມໃຫ້ຜີຍິງລູກກະສຸນ (ໂອກາດ 1%)
+    if (Math.random() < 0.01) {
+      shootBullet(enemy);
+    }
+  });
+
+  // 3. ອັບເດດລູກກະສຸນ
+  for (let i = bullets.length - 1; i >= 0; i--) {
+    let b = bullets[i];
+    if (!isTimeStopped) {
+      b.x += b.dx * 2; // ຂະຍັບລູກກະສຸນ
+      b.y += b.dy * 2;
+    }
+
+    // ກວດສອບວ່າກະສຸນຕຳຜູ້ຫຼິ້ນບໍ່? ແລະ ບໍ່ໄດ້ເປັນອະນາເມັດ
+    if (
+      isCollide(player, b) &&
+      Date.now() - startTime >= invincibilityDuration
+    ) {
+      let heartDamaged = false;
+      // ຫາຫົວໃຈທີ່ຍັງແດງຢູ່ ແລ້ວປ່ຽນເປັນສີຂາວ
+      for (let h = 0; h < playerHearts.length; h++) {
+        if (playerHearts[h] === true) {
+          playerHearts[h] = false;
+          heartDamaged = true;
+
+          hitSound.currentTime = 0; //ຮີເຊັບສຽງເພືອໄຫ້ຫລີ້ນໄດ້ຕໍ່ກັນ
+          hitSound.play().catch(() => {});
+          bullets.splice(i, 1); // ລົບກະສຸນຖິ້ມ
+          break;
+        }
+      }
+
+      // ຖ້າຫົວໃຈໝົດທຸກດວງ -> ຈົບເກມ
+      if (!heartDamaged || playerHearts.every((h) => h === false)) {
+        triggerGameOver();
+      }
+    }
+
+    // ລົບກະສຸນທີ່ອອກນອກຈໍ
+    if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height) {
+      bullets.splice(i, 1);
+    }
+  }
+
+  draw(); // ວາດຮູບໃໝ່
+  requestAnimationFrame(update); // ວົນລູບຕໍ່ໄປ
 }
 
 // --- ຟັງຊັນວາດຮູບ (Draw) ---
 function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height); // ລ້າງໜ້າຈໍເກົ່າ
+  ctx.clearRect(0, 0, canvas.width, canvas.height); // ລ້າງໜ້າຈໍເກົ່າ
 
-    // ວາດຫົວໃຈ
-    for (let i = 0; i < playerHearts.length; i++) {
-        ctx.font = "40px Arial";
-        ctx.fillText(playerHearts[i] ? "❤️" : "🤍", 20 + i * 50, 50);
-    }
+  // ວາດຫົວໃຈ
+  for (let i = 0; i < playerHearts.length; i++) {
+    ctx.font = "40px Arial";
+    ctx.fillText(playerHearts[i] ? "❤️" : "🤍", 20 + i * 50, 50);
+  }
 
-    // ວາດຜູ້ຫຼິ້ນ
-    ctx.font = player.size+"px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(player.emoji, player.x, player.y);
+  // ວາດສະຖານະ Cooldown ຂອງທັກສະ 1
+  const remainingCooldown = skillCooldown - (Date.now() - lastSkill);
+  if (remainingCooldown > 0) {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+    ctx.fillRect(10, 10, 200, 30);
+    ctx.fillStyle = "white";
+    ctx.font = "20px Arial";
+    ctx.fillText(
+      "Skill 1 Cooldown: " + Math.ceil(remainingCooldown / 1000) + "s",
+      15,
+      30
+    );
+  }
 
-    // ວາດສັດຕູທຸກໂຕໃນ Array
-    enemies.forEach(enemy => {
-        ctx.font = enemy.size+"px Arial";
-        ctx.fillText(enemy.emoji, enemy.x, enemy.y);
-    });
+  // ວາດຜູ້ຫຼິ້ນ
+  ctx.font = player.size + "px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(player.emoji, player.x, player.y);
 
-    // ວາດລູກກະສຸນ
-    bullets.forEach(b => {
-        ctx.font = b.size+"px Arial";
-        ctx.fillText(b.emoji, b.x, b.y);
-    });
+  // ສະແດງສະຖານະອະນາເມັດ (ລູກເລ່ນ)
+  if (
+    Date.now() - startTime < invincibilityDuration &&
+    Math.floor(Date.now() / 500) % 2 === 0
+  ) {
+    ctx.font = "30px Arial";
+    ctx.fillText("👼", player.x, player.y - player.size / 2 - 10);
+  }
+
+  // ວາດສັດຕູທຸກໂຕໃນ Array
+  enemies.forEach((enemy) => {
+    ctx.font = enemy.size + "px Arial";
+    ctx.fillText(enemy.emoji, enemy.x, enemy.y);
+  });
+
+  // ວາດລູກກະສຸນ
+  bullets.forEach((b) => {
+    ctx.font = b.size + "px Arial";
+    ctx.fillText(b.emoji, b.x, b.y);
+  });
 }
 
 // ເລີ່ມເກມ
