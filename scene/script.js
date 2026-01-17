@@ -34,6 +34,14 @@ let isGameOver = false;
 // ຕົວປ່ຽນສຳລັບເກັບ ID ຂອງເວລາ (Timer) ເພື່ອເອົາໄວ້ສັ່ງຢຸດພາຍຫຼັງ
 let enemySpawnerInterval;
 
+// ຕົວປ່ຽນສຳລັບ Dash
+let isDashing = false;
+let dashDuration = 0;
+let dashSpeed = 10;
+let dashCooldown = 0;
+let maxDashCooldown = 60;
+let lastKey = '';
+
 // ຕົວປ່ຽນສຳລັບການເປັນອະນາເມັດ 5 ວິນາທີເລີ່ມຕົ້ນ
 let startTime;
 let invincibilityDuration = 5000; // 5 ວິນາທີໃນ milliseconds
@@ -87,7 +95,7 @@ function initGame() {
 initGame();
 
 // --- ຮັບຄ່າການກົດປຸ່ມ (Event Listeners) ---
-canvas.addEventListener('keydown', (e) => { keys[e.key.toLowerCase()] = true; });
+canvas.addEventListener('keydown', (e) => { keys[e.key.toLowerCase()] = true; lastKey = e.key.toLowerCase(); });
 canvas.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
 
 // ປຸ່ມກົດຕອນ Game Over
@@ -143,14 +151,36 @@ function update() {
     if (isGameOver) return; // ຖ້າເກມຈົບ ໃຫ້ຢຸດເຮັດວຽກທັນທີ
 
     // 1. ຄວບຄຸມການຍ່າງຂອງຜູ້ຫຼິ້ນ
-    if (keys['w']) { player.y -= 5; player.emoji="🥺"; moveSound.play().catch(()=>{}); }
-    if (keys['s']) { player.y += 5; player.emoji="😁"; moveSound.play().catch(()=>{}); }
-    if (keys['a']) { player.x -= 5; player.emoji="😎"; moveSound.play().catch(()=>{}); }
-    if (keys['d']) { player.x += 5; player.emoji="😒"; moveSound.play().catch(()=>{}); }
+    // Handle dash
+    if (keys['e'] && !isDashing && dashCooldown === 0) {
+        isDashing = true;
+        dashDuration = 10;
+        dashCooldown = maxDashCooldown;
+        moveSound.play().catch(()=>{}); // Play sound when dashing
+    }
+
+    if (isDashing) {
+        player.emoji = "🚀";
+        if (lastKey === 'w') player.y -= dashSpeed;
+        else if (lastKey === 's') player.y += dashSpeed;
+        else if (lastKey === 'a') player.x -= dashSpeed;
+        else if (lastKey === 'd') player.x += dashSpeed;
+        dashDuration--;
+        if (dashDuration <= 0) isDashing = false;
+    } else {
+        // Normal movement
+        if (keys['w']) { player.y -= 5; player.emoji="🥺"; moveSound.play().catch(()=>{}); }
+        if (keys['s']) { player.y += 5; player.emoji="😁"; moveSound.play().catch(()=>{}); }
+        if (keys['a']) { player.x -= 5; player.emoji="😎"; moveSound.play().catch(()=>{}); }
+        if (keys['d']) { player.x += 5; player.emoji="😒"; moveSound.play().catch(()=>{}); }
+    }
 
     // Clamp player position to canvas boundaries
     player.x = Math.max(player.size / 2, Math.min(canvas.width - player.size / 2, player.x));
     player.y = Math.max(player.size / 2, Math.min(canvas.height - player.size / 2, player.y));
+
+    // Decrement dash cooldown
+    if (dashCooldown > 0) dashCooldown--;
 
     // 2. ຄວບຄຸມສັດຕູທຸກໂຕ (Enemies Logic)
     enemies.forEach(enemy => {
