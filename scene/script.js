@@ -10,14 +10,19 @@ const btnMenu = document.getElementById("btnMenu");
 canvas.focus();
 
 // --- ຕັ້ງຄ່າສຽງ (Audio Setup) ---
-const moveSound = new Audio("../assets/sound/Race_Car.mp3"); 
+const moveSound = new Audio("../assets/sound/Race_Car.mp3");
 const shootSound = new Audio("../assets/sound/Laser Gun Sound Effect.mp3");
 const hitSound = new Audio("../assets/sound/roblox-death-sound_1.mp3");
 const gameOverSound = new Audio("../assets/sound/bruh-sound-effect_WstdzdM.mp3");
 
+// --- Movement Constants ---
+const ACCEL = 0.5;
+const FRICTION = 0.9;
+const MAX_SPEED = 10;
+
 // --- ຕົວປ່ຽນຂອງເກມ (Game Variables) ---
 // ຂໍ້ມູນຂອງຜູ້ຫຼິ້ນ (ລົດ)
-let player = { x: 100, y: 100, size: 60, emoji: "🚗", hp: 5 };
+let player = { x: 100, y: 100, vx: 0, vy: 0, size: 60, emoji: "🚗", hp: 5 };
 
 // ຂໍ້ມູນຂອງສັດຕູ (ເກັບເປັນ Array ເພາະມີຫຼາຍໂຕ)
 let enemies = []; 
@@ -33,6 +38,16 @@ let isGameOver = false;
 
 // ຕົວປ່ຽນສຳລັບເກັບ ID ຂອງເວລາ (Timer) ເພື່ອເອົາໄວ້ສັ່ງຢຸດພາຍຫຼັງ
 let enemySpawnerInterval;
+
+// ຕົວປ່ຽນສຳລັບ Dash
+let isDashing = false;
+let dashDuration = 0;
+let dashDx = 0;
+let dashDy = 0;
+let dashCooldown = 0;
+let maxDashCooldown = 300; // 5 seconds at 60fps
+
+
 
 // ຕົວປ່ຽນສຳລັບການເປັນອະນາເມັດ 5 ວິນາທີເລີ່ມຕົ້ນ
 let startTime;
@@ -143,10 +158,75 @@ function update() {
     if (isGameOver) return; // ຖ້າເກມຈົບ ໃຫ້ຢຸດເຮັດວຽກທັນທີ
 
     // 1. ຄວບຄຸມການຍ່າງຂອງຜູ້ຫຼິ້ນ
-    if (keys['w']) { player.y -= 5; player.emoji="🥺"; moveSound.play().catch(()=>{}); }
-    if (keys['s']) { player.y += 5; player.emoji="😁"; moveSound.play().catch(()=>{}); }
-    if (keys['a']) { player.x -= 5; player.emoji="😎"; moveSound.play().catch(()=>{}); }
-    if (keys['d']) { player.x += 5; player.emoji="😒"; moveSound.play().catch(()=>{}); }
+    // Apply acceleration
+    if (keys['w']) player.vy -= ACCEL;
+    if (keys['s']) player.vy += ACCEL;
+    if (keys['a']) player.vx -= ACCEL;
+    if (keys['d']) player.vx += ACCEL;
+
+    // Apply friction
+    player.vx *= FRICTION;
+    player.vy *= FRICTION;
+
+    // Clamp speed
+    let speed = Math.sqrt(player.vx * player.vx + player.vy * player.vy);
+    if (speed > MAX_SPEED) {
+        player.vx = (player.vx / speed) * MAX_SPEED;
+        player.vy = (player.vy / speed) * MAX_SPEED;
+    }
+
+    // Update position
+    player.x += player.vx;
+    player.y += player.vy;
+
+    // Set emoji based on dominant direction
+    if (Math.abs(player.vy) > Math.abs(player.vx)) {
+        if (player.vy < -1) player.emoji = "🥺";
+        else if (player.vy > 1) player.emoji = "😁";
+        else player.emoji = "🚗";
+    } else if (Math.abs(player.vx) > 1) {
+        if (player.vx < -1) player.emoji = "😎";
+        else if (player.vx > 1) player.emoji = "😒";
+        else player.emoji = "🚗";
+    } else {
+        player.emoji = "🚗"; // default
+    }
+
+    // Handle dash
+    if (keys['e'] && dashCooldown === 0 && !isDashing) {
+        // Calculate direction based on currently held keys
+        dashDx = 0;
+        dashDy = 0;
+        if (keys['w']) dashDy -= 1;
+        if (keys['s']) dashDy += 1;
+        if (keys['a']) dashDx -= 1;
+        if (keys['d']) dashDx += 1;
+        // Normalize if diagonal
+        let len = Math.sqrt(dashDx*dashDx + dashDy*dashDy);
+        if (len > 0) {
+            dashDx /= len;
+            dashDy /= len;
+        } else {
+            // No direction, default to up
+            dashDx = 0;
+            dashDy = -1;
+        }
+        isDashing = true;
+        dashDuration = 20; // 20 frames for smooth animation, total 100 pixels
+        dashCooldown = maxDashCooldown;
+        moveSound.play().catch(()=>{}); // Play sound
+    }
+
+    if (isDashing) {
+        player.emoji = "🚀";
+        player.x += dashDx * 20; // 20 pixels per frame
+        player.y += dashDy * 20;
+        dashDuration--;
+        if (dashDuration <= 0) isDashing = false;
+    }
+
+    // Decrement dash cooldown
+    if (dashCooldown > 0) dashCooldown--;
 
     // Clamp player position to canvas boundaries
     player.x = Math.max(player.size / 2, Math.min(canvas.width - player.size / 2, player.x));
