@@ -4,7 +4,7 @@
 
 ### Player
 - **Movement**: Physics-based movement using WASD keys with acceleration and friction
-- **Shooting**: Press spacebar to shoot bullets in the direction of movement
+- **Sword Attack**: Press spacebar to perform a melee sword attack that damages enemies within range
 - **Dash**: Press E to dash in the direction of currently held WASD keys (smooth animation, 5-second cooldown)
 - **Health**: 5 hearts that take damage from enemy bullets
 
@@ -22,11 +22,11 @@
 ### Controls
 - **WASD**: Move player
 - **E**: Dash in direction of held WASD keys
-- **Spacebar**: Shoot bullet in movement direction
+- **Spacebar**: Sword attack (melee)
 
 ### Visuals
 - Player emoji changes based on movement direction
 - During dash, player becomes 🚀
+- During sword attack, player becomes ⚔️
 - Enemy bullets: ❤️
-- Player bullets: 🔵
 - Hearts: ❤️ (full), 🤍 (empty)

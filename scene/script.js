@@ -25,16 +25,14 @@ const MAX_SPEED = 10;
 let player = { x: 100, y: 100, vx: 0, vy: 0, size: 60, emoji: "🚗", hp: 5 };
 
 // ຂໍ້ມູນຂອງສັດຕູ (ເກັບເປັນ Array ເພາະມີຫຼາຍໂຕ)
-let enemies = []; 
+let enemies = [];
 
 // ເກັບລູກກະສຸນທັງໝົດ (enemy bullets)
 let bullets = [];
-// ເກັບລູກກະສຸນຂອງຜູ້ຫຼິ້ນ
-let playerBullets = [];
 // ເກັບປຸ່ມທີ່ກົດ
 let keys = {};
 // ເກັບສະຖານະຫົວໃຈ (ຊີວິດ)
-let playerHearts = []; 
+let playerHearts = [];
 // ສະຖານະວ່າເກມຈົບຫຼືຍັງ
 let isGameOver = false;
 
@@ -49,7 +47,10 @@ let dashDy = 0;
 let dashCooldown = 0;
 let maxDashCooldown = 300; // 5 seconds at 60fps
 
-
+// ຕົວປ່ຽນສຳລັບ Sword Attack
+let isAttacking = false;
+let attackDuration = 0;
+let attackRange = 80; // pixels
 
 // ຕົວປ່ຽນສຳລັບການເປັນອະນາເມັດ 5 ວິນາທີເລີ່ມຕົ້ນ
 let startTime;
@@ -70,12 +71,12 @@ function spawnEnemy() {
     let randomY = Math.random() * (canvas.height - 60);
 
     // ສ້າງ Object ສັດຕູໂຕໃໝ່
-    let newEnemy = { 
-        x: randomX, 
-        y: randomY, 
-        size: 60, 
-        emoji: "👻", 
-        speed: 1.5 
+    let newEnemy = {
+        x: randomX,
+        y: randomY,
+        size: 60,
+        emoji: "👻",
+        speed: 1.5
     };
 
     // ເພີ່ມສັດຕູເຂົ້າໄປໃນກອງທັບ (Array)
@@ -121,16 +122,16 @@ function shootBullet(shooter) {
     if(isGameOver) return; // ຖ້າເກມຈົບແລ້ວ ຫ້າມຍິງ
 
     // ຄຳນວນທິດທາງຈາກ ສັດຕູ -> ໄປຫາ -> ຜູ້ຫຼິ້ນ
-    let dx = (player.x - shooter.x) / 100; 
+    let dx = (player.x - shooter.x) / 100;
     let dy = (player.y - shooter.y) / 100;
-    
-    bullets.push({ 
-        x: shooter.x, 
-        y: shooter.y, 
-        size: 30, 
-        emoji: "❤️", 
-        dx: dx, 
-        dy: dy 
+
+    bullets.push({
+        x: shooter.x,
+        y: shooter.y,
+        size: 30,
+        emoji: "❤️",
+        dx: dx,
+        dy: dy
     });
 
     shootSound.currentTime = 0;
@@ -139,7 +140,7 @@ function shootBullet(shooter) {
 
 // --- ຟັງຊັນກວດສອບການຕຳກັນ (Collision) ---
 function isCollide(a, b) {
-    return Math.abs(a.x - b.x) < (a.size/2 + b.size/2) && 
+    return Math.abs(a.x - b.x) < (a.size/2 + b.size/2) &&
            Math.abs(a.y - b.y) < (a.size/2 + b.size/2);
 }
 
@@ -230,29 +231,34 @@ function update() {
     // Decrement dash cooldown
     if (dashCooldown > 0) dashCooldown--;
 
-    // Handle player shooting
-    if (keys[' '] && !isGameOver) {
-        let dx = player.vx;
-        let dy = player.vy;
-        let len = Math.sqrt(dx*dx + dy*dy);
-        if (len > 0) {
-            dx /= len;
-            dy /= len;
-        } else {
-            dx = 0;
-            dy = -1; // default up
+    // Handle sword attack
+    if (keys[' '] && !isGameOver && !isAttacking) {
+        isAttacking = true;
+        attackDuration = 15; // 15 frames for attack animation
+
+        // Check for enemies in range and damage them
+        for (let i = enemies.length - 1; i >= 0; i--) {
+            let enemy = enemies[i];
+            let dist = Math.sqrt((enemy.x - player.x) ** 2 + (enemy.y - player.y) ** 2);
+            if (dist <= attackRange) {
+                // Remove enemy
+                enemies.splice(i, 1);
+                hitSound.currentTime = 0;
+                hitSound.play().catch(() => {});
+            }
         }
-        playerBullets.push({
-            x: player.x,
-            y: player.y,
-            size: 20,
-            emoji: "🔵",
-            dx: dx,
-            dy: dy
-        });
+
         shootSound.currentTime = 0;
-        shootSound.play().catch(()=>{}); // Play shoot sound
-        keys[' '] = false; // Prevent continuous shooting
+        shootSound.play().catch(() => {}); // Play attack sound
+        keys[' '] = false; // Prevent continuous attacking
+    }
+
+    if (isAttacking) {
+        player.emoji = "⚔️";
+        attackDuration--;
+        if (attackDuration <= 0) {
+            isAttacking = false;
+        }
     }
 
     // Clamp player position to canvas boundaries
@@ -265,7 +271,7 @@ function update() {
         let dirX = player.x - enemy.x;
         let dirY = player.y - enemy.y;
         let dist = Math.sqrt(dirX*dirX + dirY*dirY);
-        
+
         // ສັ່ງໃຫ້ຜີຍ່າງເຂົ້າຫາຜູ້ຫຼິ້ນ
         if(dist > 1){
             enemy.x += (dirX/dist) * enemy.speed;
@@ -290,7 +296,7 @@ function update() {
             // ຫາຫົວໃຈທີ່ຍັງແດງຢູ່ ແລ້ວປ່ຽນເປັນສີຂາວ
             for (let h = 0; h < playerHearts.length; h++) {
                 if (playerHearts[h] === true) {
-                    playerHearts[h] = false; 
+                    playerHearts[h] = false;
                     heartDamaged = true;
 
 					hitSound.currentTime = 0;//ຮີເຊັບສຽງເພືອໄຫ້ຫລີ້ນໄດ້ຕໍ່ກັນ
@@ -299,10 +305,10 @@ function update() {
                     break;
                 }
             }
-            
+
             // ຖ້າຫົວໃຈໝົດທຸກດວງ -> ຈົບເກມ
             if (!heartDamaged || playerHearts.every(h => h === false)) {
-                triggerGameOver(); 
+                triggerGameOver();
             }
         }
 
@@ -310,29 +316,7 @@ function update() {
         if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height) {
             bullets.splice(i,1);
         }
-        
-    }
 
-    // 4. ອັບເດດລູກກະສຸນຂອງຜູ້ຫຼິ້ນ
-    for (let i = playerBullets.length-1; i>=0; i--) {
-        let b = playerBullets[i];
-        b.x += b.dx * 5; // Faster than enemy bullets
-        b.y += b.dy * 5;
-        // Check collision with enemies
-        for (let j = enemies.length-1; j>=0; j--) {
-            if (isCollide(b, enemies[j])) {
-                // Remove bullet and enemy
-                playerBullets.splice(i, 1);
-                enemies.splice(j, 1);
-                hitSound.currentTime = 0;
-                hitSound.play().catch(()=>{});
-                break;
-            }
-        }
-        // Remove bullet if out of bounds
-        if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height) {
-            playerBullets.splice(i, 1);
-        }
     }
 
     draw(); // ວາດຮູບໃໝ່
@@ -363,12 +347,6 @@ function draw() {
 
     // ວາດລູກກະສຸນ
     bullets.forEach(b => {
-        ctx.font = b.size+"px Arial";
-        ctx.fillText(b.emoji, b.x, b.y);
-    });
-
-    // ວາດລູກກະສຸນຂອງຜູ້ຫຼິ້ນ
-    playerBullets.forEach(b => {
         ctx.font = b.size+"px Arial";
         ctx.fillText(b.emoji, b.x, b.y);
     });
