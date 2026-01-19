@@ -1,5 +1,7 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
+const startScreen = document.getElementById("startScreen");
+const btnStart = document.getElementById("btnStart");
 const gameOverScreen = document.getElementById("gameOverScreen");
 const btnRetry = document.getElementById("btnRetry");
 const btnMenu = document.getElementById("btnMenu");
@@ -17,6 +19,7 @@ let bullets = []; // ເກັບລຼກກະສຸນ
 let keys = {}; // ເກັບຄ່າ keyboard
 let playerHearts = []; // ເກັບຄ່າເລືອດ
 let isGameOver = false;
+let isGameStarted = false;
 
 let enemySpawnerInterval;
 let startTime;
@@ -44,8 +47,8 @@ let p = { emoji: "❤️" };
 const e = "👻";
 
 // ຄ່າຕວາມໄວ ການຍຶງ
-const speed1 = 0.5; // ຄວາມໄວເຄື່ອງທີ່
-const speed2 = 0.5; // ຄວາມໄວຍຶງອອກ
+const speed1 = 1; // ຄວາມໄວເຄື່ອງທີ່
+const speed2 = 0.8; // ຄວາມໄວຍຶງອອກ
 
 function activateSkill() {
   const now = Date.now();
@@ -98,7 +101,6 @@ function initGame() {
     }
   }, 20000);
 }
-initGame();
 
 // skill 1
 canvas.addEventListener("keydown", (e) => {
@@ -134,6 +136,14 @@ btnRetry.addEventListener("click", () => {
 
 btnMenu.addEventListener("click", () => {
   window.location.href = "../frontend/index.html";
+});
+
+// Start Game
+btnStart.addEventListener("click", () => {
+  startScreen.classList.add("hidden");
+  isGameStarted = true;
+  initGame();
+  update();
 });
 
 function shootBullet(shooter) {
@@ -176,7 +186,7 @@ function triggerGameOver() {
 
 // 60 ວຶ
 function update() {
-  if (isGameOver) return;
+  if (isGameOver || !isGameStarted) return;
 
   // ອັບເດດເວລາແລະຄະແນນ
   survivalTime = Math.floor((Date.now() - startTime) / 1000);
@@ -331,6 +341,3 @@ function draw() {
     ctx.fillText(b.p.emoji, b.x, b.y);
   });
 }
-
-// ເລີ່ມເກມ
-update();
