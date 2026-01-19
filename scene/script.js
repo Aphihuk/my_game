@@ -28,6 +28,10 @@ let invincibilityDuration = 5000;
 let score = 0;
 let survivalTime = 0;
 let lastScoreUpdate = 0;
+let playerSpeed = 5;
+let isSpeedBoosted = false;
+let boostEndTime = 0;
+let boostCooldown = 0;
 
 let isTimeStopped = false;
 let canTeleport = false;
@@ -102,11 +106,16 @@ function initGame() {
   }, 20000);
 }
 
-// skill 1
+// skill q and e
 canvas.addEventListener("keydown", (e) => {
   keys[e.key.toLowerCase()] = true;
-  if (e.key === "1") {
+  if (e.key === "q") {
     activateSkill();
+  }
+  if (e.key === "e" && !isSpeedBoosted && Date.now() > boostCooldown) {
+    isSpeedBoosted = true;
+    boostEndTime = Date.now() + 3000;
+    boostCooldown = Date.now() + 6000;
   }
 });
 canvas.addEventListener("keyup", (e) => {
@@ -201,23 +210,31 @@ function update() {
   document.getElementById("scoreDisplay").textContent =
     "Score: " + Math.floor(score);
 
+  // Check boost timer
+  if (isSpeedBoosted && Date.now() > boostEndTime) {
+    isSpeedBoosted = false;
+  }
+
+  // Set player speed
+  playerSpeed = isSpeedBoosted ? 10 : 5;
+
   if (keys["w"]) {
-    player.y -= 5;
+    player.y -= playerSpeed;
     player.emoji = w;
     moveSound.play().catch(() => {});
   }
   if (keys["s"]) {
-    player.y += 5;
+    player.y += playerSpeed;
     player.emoji = s;
     moveSound.play().catch(() => {});
   }
   if (keys["a"]) {
-    player.x -= 5;
+    player.x -= playerSpeed;
     player.emoji = a;
     moveSound.play().catch(() => {});
   }
   if (keys["d"]) {
-    player.x += 5;
+    player.x += playerSpeed;
     player.emoji = d;
     moveSound.play().catch(() => {});
   }
@@ -312,6 +329,23 @@ function draw() {
       "Skill 1 Cooldown: " + Math.ceil(remainingCooldown / 1000) + "s",
       15,
       30
+    );
+  }
+
+  // ວາດສະຖານະ speed boost cooldown
+  const remainingBoostCooldown = Math.max(
+    0,
+    (boostCooldown - Date.now()) / 1000
+  );
+  if (remainingBoostCooldown > 0) {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+    ctx.fillRect(10, 40, 200, 30);
+    ctx.fillStyle = "white";
+    ctx.font = "20px Arial";
+    ctx.fillText(
+      "Speed Boost Cooldown: " + Math.ceil(remainingBoostCooldown) + "s",
+      15,
+      60
     );
   }
 
