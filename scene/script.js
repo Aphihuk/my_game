@@ -51,6 +51,12 @@ let maxDashCooldown = 300; // 5 seconds at 60fps
 let isAttacking = false;
 let attackDuration = 0;
 let attackRange = 80; // pixels
+let attackFrame = 0;
+
+// ຕົວປ່ຽນສຳລັບ Boss
+let bossSpawnTimer = 0;
+let bossSpawnInterval = 2400; // 40 seconds at 60fps
+let bossExists = false;
 
 // ຕົວປ່ຽນສຳລັບການເປັນອະນາເມັດ 5 ວິນາທີເລີ່ມຕົ້ນ
 let startTime;
@@ -81,6 +87,49 @@ function spawnEnemy() {
 
     // ເພີ່ມສັດຕູເຂົ້າໄປໃນກອງທັບ (Array)
     enemies.push(newEnemy);
+}
+
+// --- ຟັງຊັນສ້າງ Boss ---
+function spawnBoss() {
+    if (bossExists) return; // Don't spawn if boss already exists
+
+    // ສຸ່ມຕຳແໜ່ງເກີດ (Random X, Y) - Boss spawns at edges
+    let spawnSide = Math.floor(Math.random() * 4);
+    let bossX, bossY;
+
+    switch(spawnSide) {
+        case 0: // Top
+            bossX = Math.random() * canvas.width;
+            bossY = -100;
+            break;
+        case 1: // Right
+            bossX = canvas.width + 100;
+            bossY = Math.random() * canvas.height;
+            break;
+        case 2: // Bottom
+            bossX = Math.random() * canvas.width;
+            bossY = canvas.height + 100;
+            break;
+        case 3: // Left
+            bossX = -100;
+            bossY = Math.random() * canvas.height;
+            break;
+    }
+
+    // ສ້າງ Boss Object
+    let boss = {
+        x: bossX,
+        y: bossY,
+        size: 120, // Larger than normal enemies
+        emoji: "👹",
+        speed: 0.8, // Slower but more      
+        hp: 10, // Boss has health
+        maxHp: 10,
+        isBoss: true
+    };
+
+    enemies.push(boss);
+    bossExists = true;
 }
 
 // --- ຟັງຊັນເລີ່ມຕົ້ນເກມ (Init Game) ---
@@ -231,20 +280,39 @@ function update() {
     // Decrement dash cooldown
     if (dashCooldown > 0) dashCooldown--;
 
+    // Handle boss spawning
+    bossSpawnTimer++;
+    if (bossSpawnTimer >= bossSpawnInterval) {
+        spawnBoss();
+        bossSpawnTimer = 0;
+    }
+
     // Handle sword attack
     if (keys[' '] && !isGameOver && !isAttacking) {
         isAttacking = true;
-        attackDuration = 15; // 15 frames for attack animation
+        attackDuration = 15; // 5 frames for attack animation
+        attackFrame = 0;
 
         // Check for enemies in range and damage them
         for (let i = enemies.length - 1; i >= 0; i--) {
             let enemy = enemies[i];
             let dist = Math.sqrt((enemy.x - player.x) ** 2 + (enemy.y - player.y) ** 2);
             if (dist <= attackRange) {
-                // Remove enemy
-                enemies.splice(i, 1);
-                hitSound.currentTime = 0;
-                hitSound.play().catch(() => {});
+                if (enemy.isBoss) {
+                    // Boss takes damage instead of dying
+                    enemy.hp--;
+                    if (enemy.hp <= 0) {
+                        enemies.splice(i, 1);
+                        bossExists = false;
+                    }
+                    hitSound.currentTime = 0;
+                    hitSound.play().catch(() => {});
+                } else {
+                    // Normal enemy dies instantly
+                    enemies.splice(i, 1);
+                    hitSound.currentTime = 0;
+                    hitSound.play().catch(() => {});
+                }
             }
         }
 
