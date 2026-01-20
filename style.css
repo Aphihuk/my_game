@@ -8,7 +8,7 @@ body {
   justify-content: center;
   align-items: center;
   /* ເຮ້ດພາບພື້ນຫລົງໄຫ້ເປັນຮູບພາບ */
-  background-image: url("../assets/img/universe.jpg");
+  background-image: url("./assets/img/universe.jpg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -38,6 +38,9 @@ h2 {
   color: #ff4757;
   animation: bounce 1s infinite alternate;
 }
+.info-text{
+  margin-top: 100px;
+}
 
 @keyframes bounce {
   0% {
@@ -52,6 +55,31 @@ h2 {
   display: flex;
   flex-direction: column;
   gap: 15px;
+}
+
+.info {
+  text-align: left;
+  max-width: 600px;
+  margin: auto; 
+}
+
+.info h3 {
+  color: #333;
+  margin-top: 20px;
+}
+
+.info p, .info ul {
+  color: #555;
+  line-height: 1.6;
+}
+
+.info ul {
+  margin-left: 20px;
+}
+
+.info-container {
+  height: auto;
+  min-height: 70%;
 }
 
 button {

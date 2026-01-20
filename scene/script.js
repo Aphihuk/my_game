@@ -47,7 +47,7 @@ const s = "😁";
 const d = "😂";
 
 // ຄ່າ events
-let p = { emoji: "❤️" };
+let p = { emoji: "📷" };
 const e = "👻";
 
 // ຄ່າຕວາມໄວ ການຍຶງ
@@ -95,15 +95,15 @@ function initGame() {
   startTime = Date.now();
   initHearts();
   enemies = [];
-  spawnEnemy();
+  // spawnEnemy();
 
   // ຕັ້ງໂມງຈັບເວລາໃຫ້ສ້າງສັດຕູເພີ່ມທຸກໆ 20 ວິນາທີ
-  if (enemySpawnerInterval) clearInterval(enemySpawnerInterval);
-  enemySpawnerInterval = setInterval(() => {
-    if (!isGameOver) {
-      spawnEnemy(); // events
-    }
-  }, 20000);
+  // if (enemySpawnerInterval) clearInterval(enemySpawnerInterval);
+  // enemySpawnerInterval = setInterval(() => {
+  //   if (!isGameOver) {
+  //     spawnEnemy(); // events
+  //   }
+  // }, 20000);
 }
 
 // skill q and e
@@ -144,7 +144,7 @@ btnRetry.addEventListener("click", () => {
 });
 
 btnMenu.addEventListener("click", () => {
-  window.location.href = "../frontend/index.html";
+  window.location.href = "../index.html";
 });
 
 // Start Game
