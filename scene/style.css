@@ -75,14 +75,33 @@ canvas {
   z-index: 10;
 }
 
+#settingsScreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
 .modal-content {
+  text-align: center;
+  box-shadow: rgba(0, 0, 0, 0.5) 0px 5px 20px;
+  max-width: 80%;
+  max-height: 80%;
   background: white;
   padding: 40px;
   border-radius: 15px;
-  text-align: center;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
-  border: 4px solid #333;
-  animation: popIn 0.3s ease-out;
+  border-width: 4px;
+  border-style: solid;
+  border-color: rgb(51, 51, 51);
+  border-image: initial;
+  animation: 0.3s ease-out 0s 1 normal none running popIn;
+  overflow: auto;
 }
 
 .modal-content h1 {
@@ -91,9 +110,37 @@ canvas {
   font-size: 3rem;
 }
 
+.modal-content h2 {
+  color: #ff4757;
+  margin: 0 0 20px 0;
+  font-size: 2rem;
+}
+
 .modal-content p {
   font-size: 1.5rem;
   margin-bottom: 30px;
+}
+
+.modal-content label {
+  display: block;
+  margin: 10px 0 5px 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.modal-content input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 15px;
+  border: 2px solid #ddd;
+  border-radius: 5px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.modal-content input:focus {
+  border-color: #2ed573;
+  outline: none;
 }
 
 .button-group {
@@ -125,6 +172,17 @@ canvas {
 }
 
 #btnMenu {
+  background-color: #ff4757;
+}
+
+#btnSaveSettings {
+  background-color: #2ed573;
+}
+
+#btnSettings {
+  background-color: rgb(255, 165, 2);
+}
+#btnBackSettings {
   background-color: #ff4757;
 }
 

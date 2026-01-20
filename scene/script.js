@@ -5,6 +5,10 @@ const btnStart = document.getElementById("btnStart");
 const gameOverScreen = document.getElementById("gameOverScreen");
 const btnRetry = document.getElementById("btnRetry");
 const btnMenu = document.getElementById("btnMenu");
+const settingsScreen = document.getElementById("settingsScreen");
+const btnSettings = document.getElementById("btnSettings");
+const btnSaveSettings = document.getElementById("btnSaveSettings");
+const btnBackSettings = document.getElementById("btnBackSettings");
 canvas.focus(); // ຮັບຄຳສັ່ງ keyboard
 const moveSound = new Audio("../assets/sound/Race_Car.mp3");
 const shootSound = new Audio("../assets/sound/Laser Gun Sound Effect.mp3");
@@ -41,18 +45,18 @@ let mouseX = 0;
 let mouseY = 0;
 
 // ຄ່າ keyboard
-const w = "🥺";
-const a = "😎";
-const s = "😁";
-const d = "😂";
+let w = "🥺";
+let a = "😎";
+let s = "😁";
+let d = "😂";
 
 // ຄ່າ events
-let p = { emoji: "📷" };
-const e = "👻";
+let p = { emoji: "🔥" };
+let e = "👻";
 
 // ຄ່າຕວາມໄວ ການຍຶງ
-const speed1 = 1; // ຄວາມໄວເຄື່ອງທີ່
-const speed2 = 0.8; // ຄວາມໄວຍຶງອອກ
+let speed1 = 1; // ຄວາມໄວເຄື່ອງທີ່
+let speed2 = 0.8; // ຄວາມໄວຍຶງອອກ
 
 function activateSkill() {
   const now = Date.now();
@@ -95,15 +99,15 @@ function initGame() {
   startTime = Date.now();
   initHearts();
   enemies = [];
-  // spawnEnemy();
+  spawnEnemy();
 
   // ຕັ້ງໂມງຈັບເວລາໃຫ້ສ້າງສັດຕູເພີ່ມທຸກໆ 20 ວິນາທີ
-  // if (enemySpawnerInterval) clearInterval(enemySpawnerInterval);
-  // enemySpawnerInterval = setInterval(() => {
-  //   if (!isGameOver) {
-  //     spawnEnemy(); // events
-  //   }
-  // }, 20000);
+  if (enemySpawnerInterval) clearInterval(enemySpawnerInterval);
+  enemySpawnerInterval = setInterval(() => {
+    if (!isGameOver) {
+      spawnEnemy(); // events
+    }
+  }, 20000);
 }
 
 // skill q and e
@@ -153,6 +157,78 @@ btnStart.addEventListener("click", () => {
   isGameStarted = true;
   initGame();
   update();
+});
+
+// Settings
+let settings = {
+  w: "🥺",
+  a: "😎",
+  s: "😁",
+  d: "😂",
+  e: "👻",
+  bulletEmoji: "🔥",
+  speed1: 1,
+  speed2: 0.8,
+};
+
+function loadSettings() {
+  const saved = localStorage.getItem("gameSettings");
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    settings = { ...settings, ...parsed };
+  }
+}
+
+function saveSettings() {
+  localStorage.setItem("gameSettings", JSON.stringify(settings));
+}
+
+function applySettings() {
+  w = settings.w;
+  a = settings.a;
+  s = settings.s;
+  d = settings.d;
+  e = settings.e;
+  p.emoji = settings.bulletEmoji;
+  speed1 = settings.speed1;
+  speed2 = settings.speed2;
+}
+
+// Load settings on start
+loadSettings();
+applySettings();
+
+btnSettings.addEventListener("click", () => {
+  document.getElementById("speed1Input").value = speed1;
+  document.getElementById("speed2Input").value = speed2;
+  document.getElementById("bulletEmojiInput").value = p.emoji;
+  document.getElementById("enemyEmojiInput").value = e;
+  document.getElementById("wEmojiInput").value = w;
+  document.getElementById("aEmojiInput").value = a;
+  document.getElementById("sEmojiInput").value = s;
+  document.getElementById("dEmojiInput").value = d;
+  startScreen.classList.add("hidden");
+  settingsScreen.classList.remove("hidden");
+});
+
+btnBackSettings.addEventListener("click", () => {
+  settingsScreen.classList.add("hidden");
+  startScreen.classList.remove("hidden");
+});
+
+btnSaveSettings.addEventListener("click", () => {
+  settings.speed1 = parseFloat(document.getElementById("speed1Input").value);
+  settings.speed2 = parseFloat(document.getElementById("speed2Input").value);
+  settings.bulletEmoji = document.getElementById("bulletEmojiInput").value;
+  settings.e = document.getElementById("enemyEmojiInput").value;
+  settings.w = document.getElementById("wEmojiInput").value;
+  settings.a = document.getElementById("aEmojiInput").value;
+  settings.s = document.getElementById("sEmojiInput").value;
+  settings.d = document.getElementById("dEmojiInput").value;
+  saveSettings();
+  applySettings();
+  settingsScreen.classList.add("hidden");
+  startScreen.classList.remove("hidden");
 });
 
 function shootBullet(shooter) {
@@ -375,3 +451,5 @@ function draw() {
     ctx.fillText(b.p.emoji, b.x, b.y);
   });
 }
+
+update();

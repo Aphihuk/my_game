@@ -7,7 +7,6 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  /* ເຮ້ດພາບພື້ນຫລົງໄຫ້ເປັນຮູບພາບ */
   background-image: url("./assets/img/universe.jpg");
   background-size: cover;
   background-position: center;
@@ -16,7 +15,6 @@ body {
 }
 
 .container {
-  /* ຂະຫນານຂອງ ເມມຸ ປັບຕາມໃຈ */
   width: 50%;
   height: 50%;
   text-align: center;
@@ -32,13 +30,12 @@ h2 {
   margin-bottom: 30px;
 }
 
-/* ເຮັດໄຫ້ອັກສອນ ຂະຫຍັບ */
 .anim-text {
   display: inline-block;
   color: #ff4757;
   animation: bounce 1s infinite alternate;
 }
-.info-text{
+.info-text {
   margin-top: 100px;
 }
 
@@ -60,7 +57,7 @@ h2 {
 .info {
   text-align: left;
   max-width: 600px;
-  margin: auto; 
+  margin: auto;
 }
 
 .info h3 {
@@ -68,7 +65,8 @@ h2 {
   margin-top: 20px;
 }
 
-.info p, .info ul {
+.info p,
+.info ul {
   color: #555;
   line-height: 1.6;
 }
@@ -91,9 +89,9 @@ button {
   border: none;
   border-radius: 8px;
   transition: all 0.2s ease;
+  font-family: "Phetsarath OT";
 }
 
-/* effect ຕອນກົດປູນ */
 button:hover {
   transform: scale(1.1);
   background-color: #26af61;

@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -12,34 +11,52 @@
       <p id="timeDisplay">Time: 0s</p>
       <p id="scoreDisplay">Score: 0</p>
     </div>
-    <a href="../index.html" class="back-btn">ກັບຫນ້າເມມ</a>
+    <a href="../index.html" class="back-btn">ກັບໜ້າເມນູ</a>
     <div class="back-btn1">
       <h5>ເດີນໜ້າ w a s d</h5>
-      <h5>ກດ E ເພື່ອເລັ່ງຄວາມໄວ</h5>
-      <h5>ກດ q ຢູດເວລາ</h5>
+      <h5>ກົດ E ເພື່ອເລັ່ງຄວາມໄວ</h5>
+      <h5>ກົດ q ຢູດເວລາ</h5>
     </div>
-    <div id="startScreen">
+    <div id="startScreen" class="">
       <div class="modal-content">
-        <h1>ເລີ່ມເກມ</h1>
-        <p>ກົດປຸ່ມເລີ່ມເພື່ອເລີ່ມຫຼິ້ນເກມ</p>
-        <p>ເດີນໜ້າ w a s d</p>
-        <p>ກດ E ເພື່ອເລັ່ງຄວາມໄວ</p>
-        <p>ກດ q ຢູດເວລາ</p>
-
-        <div class="button-group">
-          <button id="btnStart">ເລີ່ມເກມ</button>
-        </div>
+        <p>start</p>
+        <button id="btnStart">Start</button>
+        <button id="btnSettings">Settings</button>
       </div>
     </div>
 
     <div id="gameOverScreen" class="hidden">
       <div class="modal-content">
         <h1>ເເພ້ ເກມ</h1>
-        <p>ຫົວໃຈໜົດເເລ້ວ ບັກຫຳ</p>
+        <p>Game Over</p>
         <div class="button-group">
-          <button id="btnRetry">ຫລີນອີກທີ</button>
-          <button id="btnMenu">ກັບຫນ້າ ເມນູ</button>
+          <button id="btnRetry">back to start</button>
+          <button id="btnMenu">back to menu</button>
         </div>
+      </div>
+    </div>
+
+    <div id="settingsScreen" class="hidden">
+      <div class="modal-content">
+        <h2>Settings</h2>
+        <label for="speed1Input">ຄວາມໄວເຄື່ອງທີ່ກະສຸນ:</label>
+        <input type="number" id="speed1Input" step="0.1" /><br />
+        <label for="speed2Input">ຄວາມໄວຍິງອອກສຸນ:</label>
+        <input type="number" id="speed2Input" step="0.1" /><br />
+        <label for="bulletEmojiInput">Bullet Emoji:</label>
+        <input type="text" id="bulletEmojiInput" /><br />
+        <label for="enemyEmojiInput">Enemy Emoji:</label>
+        <input type="text" id="enemyEmojiInput" /><br />
+        <label for="wEmojiInput">key w:</label>
+        <input type="text" id="wEmojiInput" /><br />
+        <label for="aEmojiInput">key a:</label>
+        <input type="text" id="aEmojiInput" /><br />
+        <label for="sEmojiInput">key s:</label>
+        <input type="text" id="sEmojiInput" /><br />
+        <label for="dEmojiInput">key d :</label>
+        <input type="text" id="dEmojiInput" /><br />
+        <button id="btnSaveSettings">Save Settings</button>
+        <button id="btnBackSettings">Back</button>
       </div>
     </div>
 
